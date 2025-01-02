@@ -1,7 +1,10 @@
+import 'package:budgetly/provider/provider_user.dart';
+import 'package:budgetly/screens/home.dart';
 import 'package:budgetly/screens/onboarding.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-  Map<String, dynamic>? userData;
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
@@ -38,10 +40,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        setState(() {
-          userData = data;
-        });
+
+        Provider.of<UserProvider>(context, listen: false)
+            .setUserId(data['userId']); // Set userId ke provider
         _showMessage('Login berhasil! Selamat datang, ${data['displayName']}');
+
+        // Navigasi ke HomeScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
       } else {
         final data = jsonDecode(response.body);
         _showMessage(data['error'] ?? 'Login gagal');
@@ -66,9 +74,20 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: userData == null
-            ? _buildLoginForm(context)
-            : _buildUserProfile(context),
+        child: Stack(
+          children: [
+            _buildLoginForm(context),
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -169,49 +188,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: _isLoading ? null : _handleLogin,
-                    child: _isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
-                        : Text(
-                            'Masuk',
-                            style: TextStyle(
-                                fontSize: 18,
-                                color: Theme.of(context).colorScheme.secondary),
-                          ),
+                    onPressed: _handleLogin,
+                    child: const Text(
+                      'Masuk',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
                   ),
                 ],
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUserProfile(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (userData?['profilePic'] != null)
-          CircleAvatar(
-            radius: 60,
-            backgroundImage: NetworkImage(
-              userData!['profilePic'].startsWith('http')
-                  ? userData!['profilePic']
-                  : 'https://budgetly-api-pa7n.vercel.app${userData!['profilePic']}',
-            ),
-          ),
-        const SizedBox(height: 20),
-        Text(
-          userData?['displayName'] ?? 'Nama tidak tersedia',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          userData?['email'] ?? 'Email tidak tersedia',
-          style: const TextStyle(fontSize: 16, color: Colors.grey),
         ),
       ],
     );

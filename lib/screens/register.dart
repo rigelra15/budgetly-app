@@ -1,3 +1,4 @@
+import 'package:budgetly/screens/login.dart';
 import 'package:budgetly/screens/onboarding.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -29,18 +30,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> handleAccountCreation(BuildContext context) async {
+  Future<void> handleAccountCreation() async {
     final name = nameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    if (name.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        profileImage == null) {
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Semua field harus diisi termasuk foto profil')),
+            content: Text('Nama, email, dan kata sandi wajib diisi')),
       );
       return;
     }
@@ -60,13 +58,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       request.fields['email'] = email;
       request.fields['password'] = password;
 
-      // Tambahkan file gambar ke request
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'profilePic',
-          profileImage!.path,
-        ),
-      );
+      // Tambahkan file gambar ke request jika ada
+      if (profileImage != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'profilePic',
+            profileImage!.path,
+          ),
+        );
+      }
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -79,10 +79,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           SnackBar(content: Text('$message\nUID: $id')),
         );
 
-        // Navigasi ke layar berikutnya
+        // Navigasi ke layar login
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       } else {
         final responseData = jsonDecode(response.body);
@@ -159,15 +159,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 10),
                 GestureDetector(
-                  onTap: pickImage,
-                  child: CircleAvatar(
-                    radius: 60, // Ukuran lingkaran
-                    backgroundColor: Colors
-                        .grey.shade200, // Background jika gambar belum ada
-                    backgroundImage: profileImage != null
-                        ? FileImage(profileImage!)
-                        : const AssetImage('assets/logo_budgetly.png')
-                            as ImageProvider,
+                  onTap: pickImage, // Fungsi untuk memilih gambar
+                  child: Stack(
+                    alignment: Alignment
+                        .center, // Ikon kamera akan berada di tengah lingkaran
+                    children: [
+                      CircleAvatar(
+                        radius: 60, // Ukuran lingkaran
+                        backgroundColor:
+                            Colors.grey.shade200, // Warna latar belakang
+                        backgroundImage: profileImage != null
+                            ? FileImage(profileImage!) // Gambar yang dipilih
+                            : null, // Tidak ada gambar jika belum dipilih
+                      ),
+                      if (profileImage ==
+                          null) // Tampilkan ikon kamera jika gambar belum dipilih
+                        Icon(
+                          Icons.camera_alt, // Ikon kamera
+                          size: 30, // Ukuran ikon
+                          color: Colors.grey.shade600, // Warna ikon
+                        ),
+                    ],
                   ),
                 ),
                 Padding(
@@ -264,13 +276,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          onPressed: () => handleAccountCreation(context),
-                          child: Text(
-                            'Lanjutkan',
-                            style: TextStyle(
-                                fontSize: 18,
-                                color: Theme.of(context).colorScheme.secondary),
-                          ),
+                          onPressed: isLoading ? null : handleAccountCreation,
+                          child: isLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : Text(
+                                  'Lanjutkan',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .secondary),
+                                ),
                         ),
                       ],
                     )),

@@ -1,8 +1,17 @@
 import 'package:budgetly/screens/onboarding.dart';
+import 'package:provider/provider.dart';
+import 'package:budgetly/provider/provider_user.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
