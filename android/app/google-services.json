@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "914452699814",
+    "project_id": "budgetly-app-dcdg",
+    "storage_bucket": "budgetly-app-dcdg.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:914452699814:android:3f4fc33287d5146864b267",
+        "android_client_info": {
+          "package_name": "com.rigelra.budgetly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "914452699814-2d9o67pakjohjvcumop4mrprgf1q2nr9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rigelra.budgetly",
+            "certificate_hash": "a6fac1faa7cb12e363cb345d914b1f23178b5dde"
+          }
+        },
+        {
+          "client_id": "914452699814-ub5svj2us631uqud21b89n5hofk7rsh2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmle2ursnidXlgJ9MAoOI3UKq6AZp4ZjE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "914452699814-ub5svj2us631uqud21b89n5hofk7rsh2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
