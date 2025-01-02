@@ -1,16 +1,39 @@
-# budgetly
+# Budgetly App
 
-A new Flutter project.
+<p align="center">
+  <img src="assets/logo_budgetly.png" alt="Budgetly Logo" width="160" style="border-radius: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+</p>
 
-## Getting Started
+Budgetly is a simple budgeting app that allows users to track their expenses and income. Users can create budgets, add transactions, and view their spending habits. The app is built using Dart and Flutter. The API is built using Node.js and Express.
 
-This project is a starting point for a Flutter application.
+## Features
 
-A few resources to get you started if this is your first Flutter project:
+- Create budgets
+- Add transactions
+- View spending habits
+- View transaction history
+- View budget history
+- AI powered insights
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Technologies
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Dart
+- Flutter
+- Node.js
+- Express
+- Firebase
+- Gemini AI
+
+## Installation
+
+1. Clone the repository
+2. Install the dependencies
+3. Run the app
+
+## Usage
+
+1. Create a budget
+2. Add transactions
+3. View spending habits
+4. View transaction history
+5. View budget history
