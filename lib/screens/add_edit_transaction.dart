@@ -1,19 +1,28 @@
+// ignore_for_file: must_be_immutable, avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:budgetly/provider/provider_user.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 
-class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+class AddEditTransactionScreen extends StatefulWidget {
+  String? transactionId;
+
+  AddEditTransactionScreen({super.key, this.transactionId});
 
   @override
-  State<AddTransactionScreen> createState() => _AddTransactionScreenState();
+  State<AddEditTransactionScreen> createState() =>
+      _AddEditTransactionScreenState();
 }
 
-class _AddTransactionScreenState extends State<AddTransactionScreen> {
+class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
+  bool _isLoading = false;
+  bool isLoadingAddorEdit = false;
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -52,12 +61,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     {'label': 'Pengeluaran', 'value': 'expense'},
   ];
 
-  String? _selectedCategory;
+  String? _selectedCategory = 'allowance';
   String? _selectedAccount;
   String? _selectedCurrency = 'IDR';
   String? _selectedTransactionType;
   DateTime? _selectedDate;
-  List<File> _selectedPhotos = [];
+  List<String> _existingPhotos = [];
+  final List<String> _existingPhotosToDelete = [];
+  final List<File> _newPhotos = [];
 
   final ImagePicker _picker = ImagePicker();
 
@@ -67,20 +78,91 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     } else if (_selectedTransactionType == 'expense') {
       return _expenseCategories;
     }
-    return []; // Kembalikan list kosong jika tipe transaksi belum dipilih
+    return [];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.transactionId != null) {
+      fetchTransactionData();
+      _fetchPhotos();
+    }
+  }
+
+  Future<void> fetchTransactionData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final String transactionUrl =
+        'https://budgetly-api-pa7n.vercel.app/api/transactions/${widget.transactionId}';
+
+    try {
+      final transactionResponse = await http.get(Uri.parse(transactionUrl));
+      if (transactionResponse.statusCode == 200) {
+        final transactionData = json.decode(transactionResponse.body);
+
+        setState(() {
+          _amountController.text = transactionData['amount'].toString();
+          _selectedCurrency = transactionData['currency'];
+          _selectedTransactionType = transactionData['type'];
+          _selectedCategory = transactionData['category'];
+          _selectedAccount = transactionData['account'];
+          _selectedDate = DateTime.fromMillisecondsSinceEpoch(
+            (transactionData['date']['_seconds'] as int) * 1000,
+          );
+          _descriptionController.text = transactionData['description'] ?? '';
+          _noteController.text = transactionData['note'] ?? '';
+        });
+      } else {
+        debugPrint(
+            'Failed to fetch transaction data: ${transactionResponse.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching transaction data or photos: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchPhotos() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            'https://budgetly-api-pa7n.vercel.app/api/transactions/${widget.transactionId}/photos'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _existingPhotos = List<String>.from(data['signedUrls']);
+        });
+      } else {
+        debugPrint('Failed to fetch photos: ${response.statusCode}');
+      }
+    } catch (error) {
+      debugPrint('Error fetching photos: $error');
+    }
   }
 
   Future<void> _submitTransaction() async {
+    setState(() {
+      isLoadingAddorEdit = true;
+    });
+
     if (_formKey.currentState!.validate()) {
       final userId = Provider.of<UserProvider>(context, listen: false).userId;
 
       try {
-        // Buat request dengan foto
         var request = http.MultipartRequest(
           'POST',
           Uri.parse(
               'https://budgetly-api-pa7n.vercel.app/api/transactions/add'),
         );
+
         request.fields['userId'] = userId.toString();
         request.fields['type'] = _selectedTransactionType ?? '';
         request.fields['amount'] = _amountController.text;
@@ -91,11 +173,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         request.fields['description'] = _descriptionController.text;
         request.fields['note'] = _noteController.text;
 
-        for (var photo in _selectedPhotos) {
-          request.files.add(await http.MultipartFile.fromPath(
-            'photos',
-            photo.path,
-          ));
+        for (var photo in _newPhotos) {
+          if (photo.existsSync()) {
+            request.files.add(await http.MultipartFile.fromPath(
+              'photos',
+              photo.path,
+            ));
+          } else {
+            debugPrint('Photo file does not exist: ${photo.path}');
+          }
         }
 
         final response = await request.send();
@@ -112,8 +198,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             _selectedCurrency = 'IDR';
             _selectedTransactionType = null;
             _selectedDate = null;
-            _selectedPhotos = [];
+            _newPhotos.clear();
+            isLoadingAddorEdit = false;
           });
+
+          Navigator.of(context).pop(true);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: ${response.reasonPhrase}')),
@@ -123,12 +212,74 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal menambahkan transaksi: $e')),
         );
+      } finally {
+        setState(() {
+          isLoadingAddorEdit = false;
+        });
+      }
+    }
+  }
+
+  Future<void> updateTransaction() async {
+    setState(() {
+      isLoadingAddorEdit = true;
+    });
+
+    if (_formKey.currentState!.validate()) {
+      final userId = Provider.of<UserProvider>(context, listen: false).userId;
+
+      try {
+        var request = http.MultipartRequest(
+          'PUT',
+          Uri.parse(
+              'https://budgetly-api-pa7n.vercel.app/api/transactions/${widget.transactionId}'),
+        );
+
+        request.fields['userId'] = userId.toString();
+        request.fields['type'] = _selectedTransactionType ?? '';
+        request.fields['amount'] = _amountController.text;
+        request.fields['category'] = _selectedCategory ?? '';
+        request.fields['account'] = _selectedAccount ?? '';
+        request.fields['currency'] = _selectedCurrency ?? '';
+        request.fields['date'] = _selectedDate?.toIso8601String() ?? '';
+        request.fields['description'] = _descriptionController.text;
+        request.fields['note'] = _noteController.text;
+
+        for (var photo in _newPhotos) {
+          request.files.add(await http.MultipartFile.fromPath(
+            'photos',
+            photo.path,
+          ));
+        }
+
+        request.fields['deletedPhotos'] = jsonEncode(_existingPhotosToDelete);
+        print('Deleted photos: $_existingPhotosToDelete');
+
+        final response = await request.send();
+
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Transaksi berhasil diperbarui!')),
+          );
+          Navigator.of(context).pop(true);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${response.reasonPhrase}')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memperbarui transaksi: $e')),
+        );
+      } finally {
+        setState(() {
+          isLoadingAddorEdit = false;
+        });
       }
     }
   }
 
   Future<void> _pickDateTime() async {
-    // Pilih tanggal
     final pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -137,14 +288,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
 
     if (pickedDate != null) {
-      // Jika tanggal dipilih, pilih waktu
       final pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
       );
 
       if (pickedTime != null) {
-        // Gabungkan tanggal dan waktu yang dipilih
         setState(() {
           _selectedDate = DateTime(
             pickedDate.year,
@@ -166,269 +315,480 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Future<void> _pickPhotos() async {
     final pickedImages = await _picker.pickMultiImage();
     setState(() {
-      _selectedPhotos = pickedImages.map((e) => File(e.path)).toList();
+      _newPhotos.addAll(pickedImages.map((e) => File(e.path)).toList());
     });
+
+    for (var photo in _newPhotos) {
+      debugPrint('Picked photo: ${photo.path}');
     }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Transaction'),
+        title: Text(
+          widget.transactionId == null ? 'Tambah Transaksi' : 'Edit Transaksi',
+        ),
         backgroundColor: const Color(0xFF3F8C92),
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.all(16.0),
+          child: Stack(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _amountController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Jumlah',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+              if (!_isLoading)
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _descriptionController,
+                        decoration: InputDecoration(
+                          labelText: 'Nama Transaksi',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Harap masukkan jumlah.';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  SizedBox(
-                    width: 100, // Berikan ukuran tetap pada dropdown
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedCurrency,
-                      items: _currencies
-                          .map((currency) => DropdownMenuItem(
-                                value: currency,
-                                child: Text(currency),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCurrency = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'Mata Uang',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _pickPhotos,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade300,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('Tambah Foto'),
-              ),
-              const SizedBox(height: 8),
-              // if (_selectedPhotos.isNotEmpty)
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _selectedPhotos
-                    .map((photo) => SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.file(
-                                  photo,
-                                  fit: BoxFit.cover,
-                                  width: 80,
-                                  height: 80,
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _amountController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: 'Jumlah',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.cancel, color: Colors.red),
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedPhotos.remove(photo);
-                                  });
-                                },
-                              ),
-                            ],
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Harap masukkan jumlah.';
+                                }
+                                return null;
+                              },
+                            ),
                           ),
-                        ))
-                    .toList(),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedTransactionType,
-                hint: const Text('Pilih tipe transaksi'), // Tambahkan hint text
-                items: _transactionTypes
-                    .map((type) => DropdownMenuItem<String>(
-                          value: type['value'],
-                          child: Text(capitalize(type['label']!)),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedTransactionType = value;
-                    _selectedCategory =
-                        null; // Reset kategori saat tipe transaksi berubah
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: 'Tipe Transaksi',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                          const SizedBox(width: 16),
+                          SizedBox(
+                            width: 100,
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedCurrency,
+                              items: _currencies
+                                  .map((currency) => DropdownMenuItem(
+                                        value: currency,
+                                        child: Text(currency),
+                                      ))
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedCurrency = value;
+                                });
+                              },
+                              decoration: InputDecoration(
+                                labelText: 'Mata Uang',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _selectedTransactionType,
+                        hint: const Text('Pilih tipe transaksi'),
+                        items: _transactionTypes
+                            .map((type) => DropdownMenuItem<String>(
+                                  value: type['value'],
+                                  child: Text(capitalize(type['label']!)),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedTransactionType = value;
+                            _selectedCategory = null;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Tipe Transaksi',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Mohon pilih tipe transaksi.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _selectedCategory,
+                        hint: const Text('Pilih kategori'),
+                        items: _currentCategories
+                            .map((category) => DropdownMenuItem<String>(
+                                  value: category['value'],
+                                  child: Text(category['label']!),
+                                ))
+                            .toList(),
+                        onChanged: _selectedTransactionType == null
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _selectedCategory = value;
+                                });
+                              },
+                        decoration: InputDecoration(
+                          labelText: 'Kategori',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (_selectedTransactionType == null) {
+                            return 'Mohon pilih tipe transaksi terlebih dahulu.';
+                          }
+                          if (value == null) {
+                            return 'Mohon pilih kategori.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _selectedAccount,
+                        hint: const Text('Pilih akun'),
+                        items: _accounts
+                            .map((account) => DropdownMenuItem(
+                                  value: account['value'],
+                                  child: Text(account['label']!),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedAccount = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Akun',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Mohon pilih akun.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: _pickDateTime,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 16, horizontal: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _selectedDate == null
+                                ? 'Pilih Tanggal dan Waktu'
+                                : DateFormat('dd/MM/yyyy HH:mm')
+                                    .format(_selectedDate!),
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _noteController,
+                        decoration: InputDecoration(
+                          labelText: 'Catatan (Opsional)',
+                          hintText: 'Catatan transaksi',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 8,
+                        children: [
+                          ..._existingPhotos.map((photoUrl) {
+                            return SizedBox(
+                              width: 80,
+                              height: 80,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.center,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: photoUrl.startsWith('https')
+                                        ? Image.network(
+                                            photoUrl,
+                                            fit: BoxFit.cover,
+                                            width: 80,
+                                            height: 80,
+                                          )
+                                        : Image.file(
+                                            File(photoUrl),
+                                            fit: BoxFit.cover,
+                                            width: 80,
+                                            height: 80,
+                                          ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      _showPreview(photoUrl);
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.5),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      padding: const EdgeInsets.all(8),
+                                      child: const Icon(
+                                        Icons.visibility,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: -5,
+                                    right: -5,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _existingPhotosToDelete.add(photoUrl);
+                                          _existingPhotos.remove(photoUrl);
+                                        });
+                                      },
+                                      child: Container(
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        padding: const EdgeInsets.all(4),
+                                        child: const Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                          ..._newPhotos.map((photo) {
+                            return SizedBox(
+                              width: 80,
+                              height: 80,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                alignment: Alignment.center,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Image.file(
+                                      photo,
+                                      fit: BoxFit.cover,
+                                      width: 80,
+                                      height: 80,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      _showPreview(photo.path);
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.5),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      padding: const EdgeInsets.all(8),
+                                      child: const Icon(
+                                        Icons.visibility,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: -5,
+                                    right: -5,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _newPhotos.remove(photo);
+                                        });
+                                      },
+                                      child: Container(
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        padding: const EdgeInsets.all(4),
+                                        child: const Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                          if (_existingPhotos.length + _newPhotos.length < 10)
+                            GestureDetector(
+                              onTap: _pickPhotos,
+                              child: Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  border: Border.all(
+                                    color: Colors.grey,
+                                    style: BorderStyle.solid,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.add,
+                                    color: Colors.grey,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: widget.transactionId == null
+                            ? _submitTransaction
+                            : updateTransaction,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3F8C92),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: Center(
+                          child: isLoadingAddorEdit
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child:
+                                      LoadingAnimationWidget.staggeredDotsWave(
+                                    size: 24,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  widget.transactionId == null
+                                      ? 'Tambah Transaksi'
+                                      : 'Perbarui Transaksi',
+                                  style: const TextStyle(
+                                      fontSize: 16, color: Colors.white),
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                validator: (value) {
-                  if (value == null) {
-                    return 'Mohon pilih tipe transaksi.';
-                  }
-                  return null;
-                },
-              ),
+              if (_isLoading)
+                Container(
+                    color: Colors.white,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          LoadingAnimationWidget.staggeredDotsWave(
+                            size: 50,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Memuat transaksi...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+            ],
+          )),
+    );
+  }
 
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                hint: const Text('Pilih kategori'),
-                items: _currentCategories
-                    .map((category) => DropdownMenuItem<String>(
-                          value: category['value'],
-                          child: Text(category['label']!),
-                        ))
-                    .toList(),
-                onChanged: _selectedTransactionType == null
-                    ? null // Nonaktifkan dropdown jika tipe transaksi belum dipilih
-                    : (value) {
-                        setState(() {
-                          _selectedCategory =
-                              value; // Simpan value dalam bahasa Inggris
-                        });
-                      },
-                decoration: InputDecoration(
-                  labelText: 'Kategori',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: (value) {
-                  if (_selectedTransactionType == null) {
-                    return 'Mohon pilih tipe transaksi terlebih dahulu.';
-                  }
-                  if (value == null) {
-                    return 'Mohon pilih kategori.';
-                  }
-                  return null;
-                },
+  void _showPreview(String photoPath) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
+                child: photoPath.startsWith('https')
+                    ? Image.network(
+                        photoPath,
+                        fit: BoxFit.contain,
+                      )
+                    : Image.file(
+                        File(photoPath),
+                        fit: BoxFit.contain,
+                      ),
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedAccount,
-                hint: const Text('Pilih akun'),
-                items: _accounts
-                    .map((account) => DropdownMenuItem(
-                          value: account['value'],
-                          child: Text(account['label']!),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedAccount = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: 'Akun',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
-                ),
-                validator: (value) {
-                  if (value == null) {
-                    return 'Mohon pilih akun.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: _pickDateTime,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _selectedDate == null
-                        ? 'Pilih Tanggal dan Waktu'
-                        : DateFormat('dd/MM/yyyy HH:mm').format(_selectedDate!),
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(
-                  labelText: 'Deskripsi (Opsional)',
-                  hintText: 'Deskripsi transaksi',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _noteController,
-                decoration: InputDecoration(
-                  labelText: 'Catatan (Opsional)',
-                  hintText: 'Catatan transaksi',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _submitTransaction,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3F8C92),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Center(
-                  child: Text('Tambah Transaksi',
-                      style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -1,10 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:budgetly/provider/provider_user.dart';
-import 'package:budgetly/screens/home.dart';
+import 'package:budgetly/screens/menu.dart';
 import 'package:budgetly/screens/onboarding.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +21,37 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserIdAndRedirect();
+  }
+
+  Future<void> _checkUserIdAndRedirect() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (userId != null && userId.isNotEmpty) {
+      Provider.of<UserProvider>(context, listen: false).setUserId(userId);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MenuScreen()),
+      );
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
@@ -41,14 +76,17 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userId', data['userId']);
+
         Provider.of<UserProvider>(context, listen: false)
-            .setUserId(data['userId']); // Set userId ke provider
+            .setUserId(data['userId']);
+
         _showMessage('Login berhasil! Selamat datang, ${data['displayName']}');
 
-        // Navigasi ke HomeScreen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => const MenuScreen()),
         );
       } else {
         final data = jsonDecode(response.body);
@@ -80,8 +118,9 @@ class _LoginScreenState extends State<LoginScreen> {
             if (_isLoading)
               Container(
                 color: Colors.black.withOpacity(0.5),
-                child: const Center(
-                  child: CircularProgressIndicator(
+                child: Center(
+                  child: LoadingAnimationWidget.staggeredDotsWave(
+                    size: 50,
                     color: Colors.white,
                   ),
                 ),
@@ -170,9 +209,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
                   TextField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(_isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
                       hintText: 'Kata Sandi',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),

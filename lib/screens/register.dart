@@ -48,7 +48,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // Buat request multipart
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('https://budgetly-api-pa7n.vercel.app/api/users/register'),
@@ -58,7 +57,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       request.fields['email'] = email;
       request.fields['password'] = password;
 
-      // Tambahkan file gambar ke request jika ada
       if (profileImage != null) {
         request.files.add(
           await http.MultipartFile.fromPath(
@@ -79,7 +77,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           SnackBar(content: Text('$message\nUID: $id')),
         );
 
-        // Navigasi ke layar login
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -159,25 +156,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 10),
                 GestureDetector(
-                  onTap: pickImage, // Fungsi untuk memilih gambar
+                  onTap: pickImage,
                   child: Stack(
-                    alignment: Alignment
-                        .center, // Ikon kamera akan berada di tengah lingkaran
+                    alignment: Alignment.center,
                     children: [
                       CircleAvatar(
-                        radius: 60, // Ukuran lingkaran
-                        backgroundColor:
-                            Colors.grey.shade200, // Warna latar belakang
+                        radius: 60,
+                        backgroundColor: Colors.grey.shade200,
                         backgroundImage: profileImage != null
-                            ? FileImage(profileImage!) // Gambar yang dipilih
-                            : null, // Tidak ada gambar jika belum dipilih
+                            ? FileImage(profileImage!)
+                            : null,
                       ),
-                      if (profileImage ==
-                          null) // Tampilkan ikon kamera jika gambar belum dipilih
+                      if (profileImage == null)
                         Icon(
-                          Icons.camera_alt, // Ikon kamera
-                          size: 30, // Ukuran ikon
-                          color: Colors.grey.shade600, // Warna ikon
+                          Icons.camera_alt,
+                          size: 30,
+                          color: Colors.grey.shade600,
                         ),
                     ],
                   ),
