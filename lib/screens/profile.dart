@@ -16,6 +16,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String profilePicUrl = 'https://via.placeholder.com/150';
   Map<String, dynamic> userDatas = {};
   bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -79,118 +80,142 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              Column(
-                children: [
-                  CircleAvatar(
-                      radius: 50, backgroundImage: NetworkImage(profilePicUrl)),
-                  const SizedBox(height: 10),
-                  Text(
-                    userDatas['displayName'] ?? 'John Doe',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Bagian atas dengan foto header
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 160,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF3F8C92), Color(0xFF1F4649)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    userDatas['email'] ?? 'johndoe@gmail.com',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text("Edit profile"),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _buildSectionTitle("Inventories"),
-              _buildMenuItem(
-                context,
-                icon: Icons.store,
-                title: "My stores",
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    "2",
-                    style: TextStyle(color: Colors.white, fontSize: 14),
                   ),
                 ),
-                onTap: () {},
+                Positioned(
+                  bottom: -30,
+                  left: MediaQuery.of(context).size.width / 2 - 50,
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: NetworkImage(profilePicUrl),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            Text(
+              userDatas['displayName'] ?? 'John Doe',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              userDatas['email'] ?? 'johndoe@gmail.com',
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                // Tambahkan fungsi edit profil
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text("Edit Profil"),
+            ),
+            const SizedBox(height: 20),
+
+            // Menu utama
+            _buildSectionTitle("Pengaturan Akun"),
+            _buildCard([
               _buildMenuItem(
                 context,
-                icon: Icons.support,
-                title: "Support",
-                onTap: () {},
-              ),
-              const SizedBox(height: 20),
-              _buildSectionTitle("Preferences"),
-              _buildSwitchItem(
-                context,
-                icon: Icons.notifications,
-                title: "Push notifications",
-                value: true,
-                onChanged: (val) {},
-              ),
-              _buildSwitchItem(
-                context,
-                icon: Icons.fingerprint,
-                title: "Face ID",
-                value: true,
-                onChanged: (val) {},
+                icon: Icons.edit,
+                title: "Edit Profil",
+                onTap: () {
+                  // Tambahkan fungsi edit profil
+                },
               ),
               _buildMenuItem(
                 context,
                 icon: Icons.lock,
-                title: "PIN Code",
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                title: "Keamanan (PIN/Biometrik)",
                 onTap: () {},
               ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  "Logout",
-                  style: TextStyle(color: Colors.red),
-                ),
-                onTap: () {
-                  Provider.of<UserProvider>(context, listen: false)
-                      .clearUserId();
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const OnboardingScreen()));
-                },
+              _buildMenuItem(
+                context,
+                icon: Icons.password,
+                title: "Ubah Password",
+                onTap: () {},
               ),
-            ],
-          ),
+              _buildMenuItem(
+                context,
+                icon: Icons.shield,
+                title: "Autentikasi 2FA",
+                onTap: () {},
+              ),
+              _buildMenuItem(context,
+                  icon: Icons.logout,
+                  title: 'Keluar Akun',
+                  onTap: () {},
+                  color: Colors.red)
+            ]),
+
+            // Menu pengaturan aplikasi
+            _buildSectionTitle("Pengaturan Aplikasi"),
+            _buildCard([
+              _buildMenuItem(
+                context,
+                icon: Icons.cloud,
+                title: "Backup & Restore",
+                onTap: () {},
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.color_lens,
+                title: "Tema Aplikasi",
+                onTap: () {},
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.attach_money,
+                title: "Atur Main Currency",
+                onTap: () {},
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.monetization_on,
+                title: "Atur Sub Currency",
+                onTap: () {},
+              ),
+              _buildMenuItem(
+                context,
+                icon: Icons.language,
+                title: "Bahasa",
+                onTap: () {},
+              ),
+            ]),
+
+            const SizedBox(height: 20)
+          ],
         ),
       ),
     );
@@ -198,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
@@ -212,42 +237,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildMenuItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.black),
-      title: Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+  Widget _buildCard(List<Widget> children) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white, // Warna latar belakang
+        borderRadius: BorderRadius.circular(16), // Rounded border
+        border: Border.all(
+          color: Colors.grey.shade300, // Warna border
+          width: 1, // Ketebalan border
+        ),
       ),
-      trailing: trailing,
-      onTap: onTap,
+      child: Column(children: children),
     );
   }
 
-  Widget _buildSwitchItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
+  Widget _buildMenuItem(BuildContext context,
+      {required IconData icon,
+      required String title,
+      VoidCallback? onTap,
+      Color? color}) {
     return ListTile(
-      leading: Icon(icon, color: Colors.black),
+      leading:
+          Icon(icon, color: color ?? Theme.of(context).colorScheme.primary),
       title: Text(
         title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: color ?? Colors.black),
       ),
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
-        activeColor: Colors.green,
-      ),
+      trailing:
+          Icon(Icons.arrow_forward_ios, size: 16, color: color ?? Colors.black),
+      onTap: onTap,
     );
   }
 }
