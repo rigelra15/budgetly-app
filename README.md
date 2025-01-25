@@ -19,16 +19,15 @@ Budgetly is a simple budgeting app that allows users to track their expenses and
 
 - Dart
 - Flutter
-- Node.js
-- Express
-- Firebase
-- Gemini AI
+- Node.js (Not Included in this Repository, but already deployed)
+- Express (Not Included in this Repository, but already deployed)
+- Firebase (Not Included in this Repository, but already deployed)
+- Gemini AI (Not Included in this Repository, but already deployed)
 
 ## Installation
 
-1. Clone the repository
-2. Install the dependencies
-3. Run the app
+1. Clone the repository or Download the ZIP file
+2. Run `flutter run` in the terminal to install the dependencies and run the app
 
 ## Usage
 
