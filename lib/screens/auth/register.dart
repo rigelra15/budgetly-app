@@ -71,10 +71,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        final message = responseData['message'] ?? 'Akun berhasil dibuat';
-        final id = responseData['userId'] ?? '';
+        final message = responseData['message'] ?? 'Akun berhasil dibuat! Silahkan masuk untuk melanjutkan!';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$message\nUID: $id')),
+          SnackBar(content: Text('$message')),
         );
 
         Navigator.pushReplacement(
