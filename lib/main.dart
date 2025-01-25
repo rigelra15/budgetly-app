@@ -1,8 +1,9 @@
-import 'package:budgetly/screens/onboarding.dart';
+import 'package:budgetly/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:budgetly/provider/provider_user.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,14 +27,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Prompt Generator',
+      title: 'Budgetly',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: const ColorScheme.light(
-            primary: Color(0xFF3F8C92), secondary: Colors.white),
+          primary: Color(0xFF3F8C92),
+          secondary: Colors.white,
+        ),
         useMaterial3: true,
       ),
-      home: const OnboardingScreen(),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('id', 'ID'),
+        Locale('en', 'US'),
+      ],
+      locale: const Locale('id', 'ID'),
+      home: const SplashScreen(),
     );
   }
 }

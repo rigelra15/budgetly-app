@@ -1,8 +1,6 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:budgetly/provider/provider_user.dart';
 import 'package:budgetly/screens/menu.dart';
-import 'package:budgetly/screens/onboarding.dart';
+import 'package:budgetly/screens/onboarding/onboarding.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;

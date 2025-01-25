@@ -1,5 +1,5 @@
-import 'package:budgetly/screens/login.dart';
-import 'package:budgetly/screens/onboarding.dart';
+import 'package:budgetly/screens/auth/login.dart';
+import 'package:budgetly/screens/onboarding/onboarding.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';

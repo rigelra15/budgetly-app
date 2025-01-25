@@ -1,5 +1,5 @@
-import 'package:budgetly/screens/login.dart';
-import 'package:budgetly/screens/register.dart';
+import 'package:budgetly/screens/auth/login.dart';
+import 'package:budgetly/screens/auth/register.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {

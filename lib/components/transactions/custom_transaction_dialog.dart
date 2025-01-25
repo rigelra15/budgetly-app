@@ -1,4 +1,4 @@
-import 'package:budgetly/screens/add_edit_transaction.dart';
+import 'package:budgetly/screens/transactions/add_edit_transaction.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;

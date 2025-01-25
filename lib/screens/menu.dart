@@ -1,8 +1,9 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:budgetly/screens/home.dart';
-import 'package:budgetly/screens/profile.dart';
-import 'package:budgetly/screens/transactions.dart';
+import 'package:budgetly/screens/menus/home.dart';
+import 'package:budgetly/screens/menus/profile.dart';
+import 'package:budgetly/screens/menus/transactions.dart';
+import 'package:budgetly/screens/menus/chatbot.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -31,9 +32,23 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   final List<Widget> _pages = [
     const HomeScreen(),
     const TransactionScreen(),
-    const Center(child: Text('AI Chatbot')),
+    const ChatbotScreen(),
     const ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map?;
+      if (args != null && args.containsKey('index')) {
+        setState(() {
+          _currentIndex = args['index'] as int;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

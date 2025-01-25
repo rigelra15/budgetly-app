@@ -6,14 +6,12 @@ class UserProvider with ChangeNotifier {
 
   String? get userId => _userId;
 
-  // Memuat userId dari SharedPreferences saat aplikasi dibuka
   Future<void> loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
     _userId = prefs.getString('userId');
     notifyListeners();
   }
 
-  // Menyimpan userId ke SharedPreferences dan Provider
   Future<void> setUserId(String userId) async {
     _userId = userId;
     final prefs = await SharedPreferences.getInstance();
@@ -21,7 +19,6 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Menghapus userId dari SharedPreferences dan Provider
   Future<void> clearUserId() async {
     _userId = null;
     final prefs = await SharedPreferences.getInstance();

@@ -1,5 +1,3 @@
-// ignore_for_file: empty_catches
-
 import 'package:flutter/material.dart';
 import 'package:tab_indicator_styler/tab_indicator_styler.dart';
 import 'transaction_item.dart';
@@ -28,14 +26,12 @@ class _TransactionListWithTabsState extends State<TransactionListWithTabs>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _selectedCategory;
-  final String _currentCurrency = 'IDR'; // Default currency
-// Default rate (IDR to IDR = 1.0)
+  final String _currentCurrency = 'IDR';
   Map<String, double> _currencyRates = {};
 
   final List<String> _incomeCategories = [
     'Allowance',
     'Salary',
-    'Petty Cash',
     'Bonus',
     'Other',
   ];
@@ -68,7 +64,7 @@ class _TransactionListWithTabsState extends State<TransactionListWithTabs>
 
   void _onTabChanged() {
     setState(() {
-      _selectedCategory = null; // Reset kategori saat tab berubah
+      _selectedCategory = null;
     });
   }
 
@@ -99,16 +95,13 @@ class _TransactionListWithTabsState extends State<TransactionListWithTabs>
       } else {
         throw Exception('Gagal mengambil data mata uang');
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   double _convertCurrency(int amount, String toCurrency) {
-    // Ambil kurs tujuan dan IDR sebagai base currency
     double targetRate = _currencyRates[toCurrency] ?? 1.0;
     double baseRate = _currencyRates['IDR'] ?? 1.0;
 
-    // Konversi nilai ke mata uang target
     return amount / baseRate * targetRate;
   }
 
@@ -181,7 +174,7 @@ class _TransactionListWithTabsState extends State<TransactionListWithTabs>
                 GestureDetector(
                   onTap: () {
                     setState(() {
-                      _selectedCategory = null; // Hapus filter
+                      _selectedCategory = null;
                     });
                   },
                   child: Container(
@@ -249,40 +242,130 @@ class _TransactionListWithTabsState extends State<TransactionListWithTabs>
       );
     }
 
+    Map<String, List<dynamic>> groupedTransactions = {};
+    for (var transaction in transactions) {
+      String transactionDate;
+      if (transaction['date'] is DateTime) {
+        transactionDate = DateFormat('dd MMM yyyy').format(transaction['date']);
+      } else if (transaction['date'] is String) {
+        transactionDate = DateFormat('dd MMM yyyy').format(
+          DateTime.parse(transaction['date']),
+        );
+      } else {
+        continue;
+      }
+
+      groupedTransactions.putIfAbsent(transactionDate, () => []);
+      groupedTransactions[transactionDate]!.add(transaction);
+    }
+
     return ListView.builder(
-      itemCount: transactions.length,
+      itemCount: groupedTransactions.keys.length,
       itemBuilder: (context, index) {
-        final transaction = transactions[index];
-        final type = transaction['type'] ?? 'expense';
-        final icon =
-            type == 'income' ? Icons.arrow_downward : Icons.arrow_upward;
-        final color = type == 'income' ? Colors.green : Colors.red;
-        final amount = transaction['amount'] ?? 0;
+        final date = groupedTransactions.keys.toList()[index];
+        final transactionsOnDate = groupedTransactions[date]!;
 
-        // Hitung nilai subcurrency berdasarkan conversionRate
-        final convertedAmount = _convertCurrency(amount, 'USD');
-
-        return TransactionItem(
-            icon: icon,
-            transactionId: transaction['transactionId'] as String,
-            mainCurrency: _currentCurrency,
-            amount: amount.toDouble(), // Nilai asli dalam IDR
-            subAmount: convertedAmount, // Nilai dalam USD
-            subCurrency: 'USD',
-            date: DateFormat('dd/MM/yyyy').format(
-              DateTime.fromMillisecondsSinceEpoch(
-                (transaction['date']['_seconds'] as int) * 1000,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 6, top: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3F8C92), Color(0xFF1F4649)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: Text(
+                date,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
-            account: transaction['account'] ?? 'Unknown',
-            category: transaction['category'] ?? 'Unknown',
-            photos: transaction['photos']?.cast<String>() ?? [],
-            title: transaction['description'] ?? 'No description',
-            color: color,
-            onTransactionDeleted: () {
-              widget.onTransactionDeleted();
-            });
+            ...transactionsOnDate.map((transaction) {
+              final type = transaction['type'] ?? 'expense';
+              final icon =
+                  type == 'income' ? Icons.arrow_downward : Icons.arrow_upward;
+              final color = type == 'income' ? Colors.green : Colors.red;
+              final amount = transaction['amount'] ?? 0;
+
+              final convertedAmount = _convertCurrency(amount, 'USD');
+
+              String formattedDate;
+              if (transaction['date'] is DateTime) {
+                formattedDate =
+                    DateFormat('dd/MM/yyyy HH:mm').format(transaction['date']);
+              } else if (transaction['date'] is String) {
+                formattedDate = DateFormat('dd/MM/yyyy HH:mm')
+                    .format(DateTime.parse(transaction['date']));
+              } else {
+                formattedDate = 'Unknown Date';
+              }
+
+              return TransactionItem(
+                icon: icon,
+                transactionId: transaction['transactionId'] as String,
+                mainCurrency: _currentCurrency,
+                amount: amount.toDouble(),
+                subAmount: convertedAmount,
+                subCurrency: 'USD',
+                date: formattedDate,
+                account: transaction['account'] ?? 'Unknown',
+                category: transaction['category'] ?? 'Unknown',
+                photos: transaction['photos']?.cast<String>() ?? [],
+                title: transaction['description'] ?? 'No description',
+                color: color,
+                onTransactionDeleted: () {
+                  widget.onTransactionDeleted();
+                },
+              );
+            }),
+          ],
+        );
       },
+    );
+  }
+
+  Widget buildSectionHeader(String title) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3F8C92), Color(0xFF1F4649)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey.shade400,
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
     );
   }
 }

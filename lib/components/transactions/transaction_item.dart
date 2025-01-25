@@ -1,23 +1,23 @@
-import 'package:budgetly/components/custom_transaction_dialog.dart';
+import 'package:budgetly/components/transactions/custom_transaction_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class TransactionItem extends StatelessWidget {
   final IconData icon;
   final String transactionId;
-  final String title; // Title menggantikan description
+  final String title;
   final String mainCurrency;
-  final double amount; // Nilai jumlah dalam mainCurrency
-  final double subAmount; // Nilai konversi ke subCurrency
+  final double amount;
+  final double subAmount;
   final String subCurrency;
   final String date;
-  final String account; // Akun yang digunakan
-  final String category; // Kategori transaksi
-  final List<String>? photos; // Foto transaksi (null jika tidak ada)
+  final String account;
+  final String category;
+  final List<String>? photos;
   final Color color;
   final VoidCallback onTransactionDeleted;
 
-  const TransactionItem({
+  TransactionItem({
     super.key,
     required this.icon,
     required this.transactionId,
@@ -34,28 +34,61 @@ class TransactionItem extends StatelessWidget {
     required this.onTransactionDeleted,
   });
 
+  final Map<String, String> _categoryTranslations = {
+    'allowance': 'Uang Saku',
+    'salary': 'Gaji',
+    'bonus': 'Bonus',
+    'other': 'Lainnya',
+    'food': 'Makanan',
+    'social_life': 'Kehidupan Sosial',
+    'pets': 'Hewan Peliharaan',
+    'transport': 'Transportasi',
+    'culture': 'Budaya',
+    'household': 'Rumah Tangga',
+    'apparel': 'Pakaian',
+    'beauty': 'Kecantikan',
+    'health': 'Kesehatan',
+    'education': 'Pendidikan',
+    'gift': 'Hadiah',
+  };
+
+  String _getTranslatedCategory(String category) {
+    return _categoryTranslations[category] ?? category;
+  }
+
+  final Map<String, String> _accountTranslations = {
+    'card': 'Kartu Kredit',
+    'cash': 'Tunai',
+    'e-wallet': 'Dompet Digital',
+    'bonus': 'Bonus',
+    'other': 'Lainnya',
+  };
+
+  String _getTranslatedAccount(String account) {
+    return _accountTranslations[account] ?? account;
+  }
+
   Color _getCategoryColor(String category) {
     final incomeColors = {
-      'Allowance': Colors.blue,
-      'Salary': Colors.green,
-      'Petty Cash': Colors.purple,
-      'Bonus': Colors.orange,
-      'Other': Colors.teal,
+      'allowance': Colors.blue,
+      'salary': Colors.green,
+      'bonus': Colors.orange,
+      'other': Colors.teal,
     };
 
     final expenseColors = {
-      'Food': Colors.red,
-      'Social Life': Colors.pink,
-      'Pets': Colors.brown,
-      'Transport': Colors.indigo,
-      'Culture': Colors.deepPurple,
-      'Household': Colors.cyan,
-      'Apparel': Colors.amber,
-      'Beauty': Colors.lime,
-      'Health': Colors.lightGreen,
-      'Education': Colors.blueAccent,
-      'Gift': Colors.deepOrange,
-      'Other': Colors.grey,
+      'food': Colors.red,
+      'social_life': Colors.pink,
+      'pets': Colors.brown,
+      'transport': Colors.indigo,
+      'culture': Colors.deepPurple,
+      'household': Colors.cyan,
+      'apparel': Colors.amber,
+      'beauty': Colors.lime,
+      'health': Colors.lightGreen,
+      'education': Colors.blueAccent,
+      'gift': Colors.deepOrange,
+      'other': Colors.grey,
     };
 
     return incomeColors[category] ?? expenseColors[category] ?? Colors.black;
@@ -69,6 +102,8 @@ class TransactionItem extends StatelessWidget {
         return Icons.attach_money;
       case 'e-wallet':
         return Icons.account_balance_wallet;
+      case 'bonus':
+        return Icons.card_giftcard;
       default:
         return Icons.help;
     }
@@ -110,23 +145,18 @@ class TransactionItem extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Ikon transaksi
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: color.withOpacity(0.2),
                     child: Icon(icon, color: color),
                   ),
                   const SizedBox(width: 16),
-
-                  // Detail transaksi
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Judul transaksi
                         Row(
-                          mainAxisSize: MainAxisSize
-                              .min, // Pastikan hanya memuat konten seukuran isinya
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               title,
@@ -138,8 +168,7 @@ class TransactionItem extends StatelessWidget {
                             ),
                             if (photos != null && photos!.isNotEmpty)
                               const Padding(
-                                padding: EdgeInsets.only(
-                                    left: 8.0), // Tambahkan jarak 8px
+                                padding: EdgeInsets.only(left: 8.0),
                                 child: Icon(
                                   Icons.photo,
                                   color: Colors.blueGrey,
@@ -149,11 +178,8 @@ class TransactionItem extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
-
-                        // Label kategori, akun, dan ikon foto
                         Row(
                           children: [
-                            // Label kategori
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 6),
@@ -162,7 +188,7 @@ class TransactionItem extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                category,
+                                _getTranslatedCategory(category),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: Colors.white,
@@ -171,8 +197,6 @@ class TransactionItem extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-
-                            // Ikon akun
                             CircleAvatar(
                               radius: 16,
                               backgroundColor: Colors.grey.shade200,
@@ -185,8 +209,6 @@ class TransactionItem extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 4),
-
-                        // Tanggal transaksi
                         Text(
                           date,
                           style: const TextStyle(
@@ -197,10 +219,7 @@ class TransactionItem extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const SizedBox(width: 16),
-
-                  // Jumlah transaksi
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -235,9 +254,9 @@ class TransactionItem extends StatelessWidget {
         return CustomTransactionDialog(
           title: title,
           transactionId: transactionId,
-          category: category,
+          category: _getTranslatedCategory(category),
           date: date,
-          account: account,
+          account: _getTranslatedAccount(account),
           mainCurrency: mainCurrency,
           amount: amount,
           subCurrency: subCurrency,
@@ -246,7 +265,7 @@ class TransactionItem extends StatelessWidget {
       },
     ).then((result) {
       if (result == true) {
-        onTransactionDeleted(); // Panggil callback jika berhasil dihapus
+        onTransactionDeleted();
       }
     });
   }

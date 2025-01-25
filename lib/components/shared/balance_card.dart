@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class BalanceCard extends StatefulWidget {
-  final int totalBalance;
-  final int income;
-  final int expenses;
+  final double totalBalance;
+  final double income;
+  final double expenses;
 
   const BalanceCard({
     super.key,
@@ -50,11 +50,10 @@ class _BalanceCardState extends State<BalanceCard> {
       } else {
         throw Exception('Gagal mengambil data mata uang');
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
-  double _convertCurrency(int amount, String toCurrency) {
+  double _convertCurrency(double amount, String toCurrency) {
     double targetRate = _currencyRates[toCurrency] ?? 1.0;
     double baseRate = _currencyRates['IDR'] ?? 1.0;
 
@@ -63,16 +62,23 @@ class _BalanceCardState extends State<BalanceCard> {
 
   String _formatShortCurrency(double amount) {
     if (amount >= 1000000000) {
-      return '${(amount / 1000000000).toStringAsFixed(1)}B';
+      return '${(amount / 1000000000).toStringAsFixed(2)}B';
     } else if (amount >= 1000000) {
-      return '${(amount / 1000000).toStringAsFixed(1)}M';
+      return '${(amount / 1000000).toStringAsFixed(2)}M';
     } else if (amount >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(1)}K';
+      return '${(amount / 1000).toStringAsFixed(2)}K';
+    } else if (amount <= -1000000000) {
+      return '${(amount / 1000000000).toStringAsFixed(2)}B';
+    } else if (amount <= -1000000) {
+      return '${(amount / 1000000).toStringAsFixed(2)}M';
+    } else if (amount <= -1000) {
+      return '${(amount / 1000).toStringAsFixed(2)}K';
     }
+
     return NumberFormat.currency(
-      locale: 'en_US',
+      locale: 'id_ID',
       symbol: '',
-      decimalDigits: 0,
+      decimalDigits: 3,
     ).format(amount);
   }
 
@@ -126,7 +132,7 @@ class _BalanceCardState extends State<BalanceCard> {
                 child: Row(
                   children: [
                     _buildCurrencyToggleButton('IDR'),
-                    _buildCurrencyToggleButton('CAD'),
+                    _buildCurrencyToggleButton('USD'),
                   ],
                 ),
               )
@@ -140,7 +146,9 @@ class _BalanceCardState extends State<BalanceCard> {
           const SizedBox(height: 8),
           Tooltip(
             message: NumberFormat.currency(
-                    locale: 'en_US', symbol: 'Rp', decimalDigits: 0)
+                    locale: 'id_ID',
+                    symbol: _currentCurrency,
+                    decimalDigits: 2)
                 .format(totalBalanceConverted),
             child: RichText(
               text: TextSpan(
