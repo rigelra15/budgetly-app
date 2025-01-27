@@ -141,38 +141,57 @@ class _TransactionScreenState extends State<TransactionScreen> {
             child: Padding(
               padding: const EdgeInsets.only(
                   top: 5.0, left: 20.0, right: 10.0, bottom: 10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Daftar Transaksi',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Row(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final bool isCompact = constraints.maxWidth < 320;
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      TextButton.icon(
-                        onPressed: _pickMonthYear,
-                        icon: const Icon(Icons.calendar_today,
-                            color: Colors.white),
-                        label: Text(
-                          DateFormat('MMMM yyyy', 'id_ID').format(selectedDate),
-                          style: const TextStyle(color: Colors.white),
+                      const Flexible(
+                        child: Text(
+                          'Daftar Transaksi',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.refresh, color: Colors.white),
-                        onPressed: () async {
-                          await fetchUserTransactions();
-                        },
+                      Row(
+                        children: [
+                          if (isCompact)
+                            IconButton(
+                              icon: const Icon(Icons.calendar_today,
+                                  color: Colors.white),
+                              onPressed: _pickMonthYear,
+                            )
+                          else
+                            TextButton.icon(
+                              onPressed: _pickMonthYear,
+                              icon: const Icon(Icons.calendar_today,
+                                  color: Colors.white),
+                              label: Text(
+                                DateFormat('MMMM yyyy', 'id_ID')
+                                    .format(selectedDate),
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          IconButton(
+                            icon:
+                                const Icon(Icons.refresh, color: Colors.white),
+                            onPressed: () async {
+                              await fetchUserTransactions();
+                            },
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ),
@@ -190,7 +209,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 child: Column(
                   children: [
                     SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.73,
+                      height: MediaQuery.of(context).size.height - 250,
                       child: TransactionListWithTabs(
                         transactions: transactions,
                         currency: currency,

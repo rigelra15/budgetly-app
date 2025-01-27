@@ -109,44 +109,28 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            _buildLoginForm(context),
-            if (_isLoading)
-              Container(
-                color: Colors.black.withOpacity(0.5),
-                child: Center(
-                  child: LoadingAnimationWidget.staggeredDotsWave(
-                    size: 50,
-                    color: Colors.white,
-                  ),
-                ),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: AppBar(
+          automaticallyImplyLeading: false,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF3F8C92),
+                  Color(0xFF1F4649),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoginForm(BuildContext context) {
-    return Stack(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              height: 70,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
               ),
+            ),
+            child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Stack(
                   children: [
                     Align(
@@ -179,6 +163,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            _buildLoginForm(context),
+            if (_isLoading)
+              Container(
+                color: Colors.white.withOpacity(0.8),
+                child: Center(
+                  child: LoadingAnimationWidget.staggeredDotsWave(
+                    size: 50,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginForm(BuildContext context) {
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Image.asset(

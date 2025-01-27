@@ -109,21 +109,26 @@ class TransactionItem extends StatelessWidget {
     }
   }
 
-  String _formatCurrency(double amount, String currency) {
-    final currencyFormats = {
-      'IDR': NumberFormat.currency(
-          locale: 'id_ID', symbol: 'IDR ', decimalDigits: 0),
-      'USD': NumberFormat.currency(
-          locale: 'en_US', symbol: 'USD ', decimalDigits: 2),
-      'EUR': NumberFormat.currency(
-          locale: 'de_DE', symbol: 'EUR ', decimalDigits: 2),
-    };
+  String _formatShortCurrency(double amount, String currency) {
+    if (amount >= 1000000000) {
+      return '$currency ${(amount / 1000000000).toStringAsFixed(2)}B';
+    } else if (amount >= 1000000) {
+      return '$currency ${(amount / 1000000).toStringAsFixed(2)}M';
+    } else if (amount >= 1000) {
+      return '$currency ${(amount / 1000).toStringAsFixed(2)}K';
+    } else if (amount <= -1000000000) {
+      return '$currency ${(amount / 1000000000).toStringAsFixed(2)}B';
+    } else if (amount <= -1000000) {
+      return '$currency ${(amount / 1000000).toStringAsFixed(2)}M';
+    } else if (amount <= -1000) {
+      return '$currency ${(amount / 1000).toStringAsFixed(2)}K';
+    }
 
-    final formatter = currencyFormats[currency] ??
-        NumberFormat.currency(
-            locale: 'en_US', symbol: currency, decimalDigits: 2);
-
-    return formatter.format(amount);
+    return '$currency ${NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: '',
+      decimalDigits: 2,
+    ).format(amount)}';
   }
 
   @override
@@ -224,7 +229,7 @@ class TransactionItem extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        _formatCurrency(amount, mainCurrency),
+                        _formatShortCurrency(amount.toDouble(), mainCurrency),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -232,7 +237,7 @@ class TransactionItem extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        _formatCurrency(subAmount, subCurrency),
+                        _formatShortCurrency(subAmount.toDouble(), subCurrency),
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,

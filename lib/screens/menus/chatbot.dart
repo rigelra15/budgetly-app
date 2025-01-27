@@ -269,17 +269,25 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             ),
             child: Padding(
               padding: const EdgeInsets.only(
-                  top: 5.0, left: 20.0, right: 10.0, bottom: 10.0),
+                top: 5.0,
+                left: 20.0,
+                right: 10.0,
+                bottom: 10.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Chatbot AI',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  const Expanded(
+                    child: Text(
+                      'Chatbot AI',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                   Row(

@@ -168,11 +168,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                       color: Colors.grey,
                                     ),
                                   ),
-                                  Text(
-                                    userDatas['displayName'] ?? 'User',
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
+                                  SizedBox(
+                                    width: 150,
+                                    child: Text(
+                                      userDatas['displayName'] ?? 'User',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                     ),
                                   ),
                                 ],

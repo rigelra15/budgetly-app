@@ -240,7 +240,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     top: 0,
                     right: 0,
                     child: IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _showComingSoonDialog(context);
+                      },
                       icon: const Icon(
                         Icons.edit,
                         color: Colors.white,
