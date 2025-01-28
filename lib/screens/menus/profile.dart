@@ -236,46 +236,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.all(16),
               child: Stack(
                 children: [
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: IconButton(
-                      onPressed: () {
-                        _showComingSoonDialog(context);
-                      },
-                      icon: const Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       CircleAvatar(
-                        radius: 40,
+                        radius:
+                            MediaQuery.of(context).size.width < 400 ? 30 : 40,
                         backgroundImage: NetworkImage(profilePicUrl),
                       ),
                       const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userDatas['displayName'] ?? 'John Doe',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              userDatas['displayName'] ?? 'John Doe',
+                              style: TextStyle(
+                                fontSize:
+                                    MediaQuery.of(context).size.width < 400
+                                        ? 16
+                                        : 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            userDatas['email'] ?? 'johndoe@gmail.com',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.white70,
+                            const SizedBox(height: 5),
+                            Text(
+                              userDatas['email'] ?? 'johndoe@gmail.com',
+                              style: TextStyle(
+                                fontSize:
+                                    MediaQuery.of(context).size.width < 400
+                                        ? 14
+                                        : 16,
+                                color: Colors.white70,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),

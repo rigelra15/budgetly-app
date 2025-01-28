@@ -133,123 +133,155 @@ class TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 400;
+
     return GestureDetector(
-        onTap: () {
-          _showTransactionDetails(context);
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300, width: 1),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.white,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: color.withOpacity(0.2),
-                    child: Icon(icon, color: color),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              title,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                            if (photos != null && photos!.isNotEmpty)
-                              const Padding(
-                                padding: EdgeInsets.only(left: 8.0),
-                                child: Icon(
-                                  Icons.photo,
-                                  color: Colors.blueGrey,
-                                  size: 16,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: _getCategoryColor(category),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                _getTranslatedCategory(category),
+      onTap: () {
+        _showTransactionDetails(context);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300, width: 1),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: color.withOpacity(0.2),
+                      child: Icon(icon, color: color),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                title,
                                 style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.black,
                                 ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                softWrap: false,
                               ),
+                              if (photos != null && photos!.isNotEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.only(left: 6.0),
+                                  child: Icon(
+                                    Icons.photo,
+                                    color: Colors.blueGrey,
+                                    size: 16,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              _buildCategoryBadge(category),
+                              _buildAccountIcon(account),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            date,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
                             ),
-                            const SizedBox(width: 8),
-                            CircleAvatar(
-                              radius: 16,
-                              backgroundColor: Colors.grey.shade200,
-                              child: Icon(
-                                _getAccountIcon(account),
-                                size: 16,
-                                color: Colors.grey.shade700,
-                              ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: isSmallScreen ? 90 : 120,
+                          ),
+                          child: Text(
+                            _formatShortCurrency(amount, mainCurrency),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
                             ),
-                          ],
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          date,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: isSmallScreen ? 90 : 120,
+                          ),
+                          child: Text(
+                            _formatShortCurrency(subAmount, subCurrency),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        _formatShortCurrency(amount.toDouble(), mainCurrency),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      Text(
-                        _formatShortCurrency(subAmount.toDouble(), subCurrency),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
           ),
-        ));
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryBadge(String category) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: _getCategoryColor(category),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        _getTranslatedCategory(category),
+        style: const TextStyle(
+          fontSize: 12,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccountIcon(String account) {
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: Colors.grey.shade200,
+      child: Icon(
+        _getAccountIcon(account),
+        size: 16,
+        color: Colors.grey.shade700,
+      ),
+    );
   }
 
   void _showTransactionDetails(BuildContext context) {

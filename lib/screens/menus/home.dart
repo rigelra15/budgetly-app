@@ -151,38 +151,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 30,
-                                backgroundImage: NetworkImage(profilePicUrl),
-                              ),
-                              const SizedBox(width: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Selamat Datang,',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 150,
-                                    child: Text(
-                                      userDatas['displayName'] ?? 'User',
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius:
+                                      MediaQuery.of(context).size.width < 400
+                                          ? 24
+                                          : 30,
+                                  backgroundImage: NetworkImage(profilePicUrl),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Selamat Datang,',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                        ),
                                       ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
+                                      Text(
+                                        userDatas['displayName'] ?? 'User',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
                           IconButton(
                             icon: const Icon(Icons.info),

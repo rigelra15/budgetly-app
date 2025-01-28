@@ -14,6 +14,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 600;
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
@@ -35,21 +38,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             child: SafeArea(
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        'Welcome to Budgetly!',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+              child: Center(
+                child: Text(
+                  'Welcome to Budgetly!',
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 20 : 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -69,35 +66,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   });
                 },
                 itemBuilder: (context, index) {
-                  return OnboardingSlide(
-                    image: 'assets/slide${index + 1}.webp',
-                    title: [
-                      'Track Your Expenses',
-                      'Set Your Goals',
-                      'Save Smartly',
-                      'Analyze Your Financial Health'
-                    ][index],
-                    description: [
-                      'Pantau dan catat pengeluaran harianmu dengan mudah. Dengan fitur pencatatan yang intuitif, kamu dapat mengetahui ke mana uangmu pergi dan memastikan setiap pengeluaran sesuai dengan rencanamu.',
-                      'Buat tujuan finansialmu dan pantau progresnya dengan mudah. Tetapkan target untuk menabung, investasi, atau pengeluaran besar, lalu pantau sejauh mana kamu telah mencapainya secara real-time.',
-                      'Dapatkan rekomendasi pintar untuk menabung lebih efektif. Aplikasi ini menganalisis kebiasaan belanja dan menawarkan tips untuk memaksimalkan tabungan dan meminimalkan pengeluaran yang tidak perlu.',
-                      'Lihat gambaran lengkap finansialmu kapan saja dan di mana saja. Analisis data yang visual dan informatif membantu kamu memahami kesehatan keuanganmu dan membuat keputusan yang lebih baik untuk masa depan.'
-                    ][index],
+                  return SingleChildScrollView(
+                    child: OnboardingSlide(
+                      image: 'assets/slide${index + 1}.webp',
+                      title: [
+                        'Track Your Expenses',
+                        'Set Your Goals',
+                        'Save Smartly',
+                        'Analyze Your Financial Health'
+                      ][index],
+                      description: [
+                        'Pantau dan catat pengeluaran harianmu dengan mudah. Dengan fitur pencatatan yang intuitif, kamu dapat mengetahui ke mana uangmu pergi dan memastikan setiap pengeluaran sesuai dengan rencanamu.',
+                        'Buat tujuan finansialmu dan pantau progresnya dengan mudah. Tetapkan target untuk menabung, investasi, atau pengeluaran besar, lalu pantau sejauh mana kamu telah mencapainya secara real-time.',
+                        'Dapatkan rekomendasi pintar untuk menabung lebih efektif. Aplikasi ini menganalisis kebiasaan belanja dan menawarkan tips untuk memaksimalkan tabungan dan meminimalkan pengeluaran yang tidak perlu.',
+                        'Lihat gambaran lengkap finansialmu kapan saja dan di mana saja. Analisis data yang visual dan informatif membantu kamu memahami kesehatan keuanganmu dan membuat keputusan yang lebih baik untuk masa depan.'
+                      ][index],
+                    ),
                   );
                 },
               ),
             ),
             DotsIndicator(dotCount: 4, currentPage: currentPage),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.05,
+                vertical: size.height * 0.02,
+              ),
               child: Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: EdgeInsets.symmetric(
+                          vertical: isSmallScreen ? 12 : 16,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -113,18 +116,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Text(
                         'Daftar',
                         style: TextStyle(
-                            fontSize: 18,
-                            color: Theme.of(context).colorScheme.secondary),
+                          fontSize: isSmallScreen ? 16 : 18,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 20),
+                  SizedBox(width: size.width * 0.05),
                   Expanded(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
                             color: Theme.of(context).colorScheme.primary),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: EdgeInsets.symmetric(
+                          vertical: isSmallScreen ? 12 : 16,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -140,8 +146,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Text(
                         'Masuk',
                         style: TextStyle(
-                            fontSize: 18,
-                            color: Theme.of(context).colorScheme.primary),
+                          fontSize: isSmallScreen ? 16 : 18,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -169,37 +176,47 @@ class OnboardingSlide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 600;
+
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: EdgeInsets.all(size.width * 0.05),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset(
-              image,
-              fit: BoxFit.contain,
-              width: MediaQuery.of(context).size.width - 40,
-              height: MediaQuery.of(context).size.width - 40,
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 400,
+              maxHeight: 400,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.asset(
+                image,
+                fit: BoxFit.contain,
+                width: size.width * 0.8,
+                height: size.width * 0.8,
+              ),
             ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: size.height * 0.02),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 24,
+            style: TextStyle(
+              fontSize: isSmallScreen ? 20 : 24,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: size.height * 0.01),
           Text(
             description,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: isSmallScreen ? 14 : 16,
               color: Colors.grey,
             ),
+            softWrap: true,
           ),
         ],
       ),
@@ -211,8 +228,11 @@ class DotsIndicator extends StatelessWidget {
   final int dotCount;
   final int currentPage;
 
-  const DotsIndicator(
-      {required this.dotCount, required this.currentPage, super.key});
+  const DotsIndicator({
+    required this.dotCount,
+    required this.currentPage,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -84,6 +84,8 @@ class _BalanceCardState extends State<BalanceCard> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 400;
     final currentDate = DateFormat('MMMM yyyy', 'id_ID').format(DateTime.now());
 
     final totalBalanceConverted =
@@ -101,7 +103,7 @@ class _BalanceCardState extends State<BalanceCard> {
         ),
         borderRadius: BorderRadius.circular(20),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isSmallScreen ? 12 : 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -117,9 +119,9 @@ class _BalanceCardState extends State<BalanceCard> {
                 ),
                 child: Text(
                   currentDate,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: isSmallScreen ? 14 : 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -146,116 +148,119 @@ class _BalanceCardState extends State<BalanceCard> {
           const SizedBox(height: 8),
           Tooltip(
             message: NumberFormat.currency(
-                    locale: 'id_ID',
-                    symbol: _currentCurrency,
-                    decimalDigits: 2)
+                    locale: 'id_ID', symbol: _currentCurrency, decimalDigits: 2)
                 .format(totalBalanceConverted),
-            child: RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: '$_currentCurrency ',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.normal,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$_currentCurrency ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isSmallScreen ? 16 : 18,
+                        fontWeight: FontWeight.normal,
+                      ),
                     ),
-                  ),
-                  TextSpan(
-                    text: _formatShortCurrency(totalBalanceConverted),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
+                    TextSpan(
+                      text: _formatShortCurrency(totalBalanceConverted),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isSmallScreen ? 28 : 36,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
           const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: 16,
+            runSpacing: 8,
             children: [
-              Row(
-                children: [
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child:
-                        const Icon(Icons.arrow_downward, color: Colors.green),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Pemasukan',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Tooltip(
-                        message:
-                            '$_currentCurrency ${NumberFormat.currency(locale: 'en_US', symbol: '', decimalDigits: 0).format(incomeConverted)}',
-                        child: Text(
-                          '$_currentCurrency ${_formatShortCurrency(incomeConverted)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              _buildIncomeExpenseRow(
+                icon: Icons.arrow_downward,
+                iconColor: Colors.green,
+                label: 'Pemasukan',
+                amount: incomeConverted,
               ),
-              Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        'Pengeluaran',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Tooltip(
-                        message:
-                            '$_currentCurrency ${NumberFormat.currency(locale: 'en_US', symbol: '', decimalDigits: 0).format(expensesConverted)}',
-                        child: Text(
-                          '$_currentCurrency ${_formatShortCurrency(expensesConverted)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: const Icon(Icons.arrow_upward, color: Colors.red),
-                  ),
-                ],
+              _buildIncomeExpenseRow(
+                icon: Icons.arrow_upward,
+                iconColor: Colors.red,
+                label: 'Pengeluaran',
+                amount: expensesConverted,
+                isRightAlign: true,
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildIncomeExpenseRow({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required double amount,
+    bool isRightAlign = false,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (!isRightAlign)
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(8),
+            child: Icon(icon, color: iconColor),
+          ),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment:
+              isRightAlign ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            Tooltip(
+              message:
+                  '$_currentCurrency ${NumberFormat.currency(locale: 'en_US', symbol: '', decimalDigits: 0).format(amount)}',
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '$_currentCurrency ${_formatShortCurrency(amount)}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (isRightAlign) const SizedBox(width: 8),
+        if (isRightAlign)
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(8),
+            child: Icon(icon, color: iconColor),
+          ),
+      ],
     );
   }
 

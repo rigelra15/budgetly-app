@@ -341,7 +341,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
+                      },
                       child: Text(
                         'Masuk',
                         style: TextStyle(

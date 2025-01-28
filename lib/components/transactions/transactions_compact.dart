@@ -132,6 +132,9 @@ class _TransactionsCompactState extends State<TransactionsCompact> {
     required String title,
     required List<dynamic> transactions,
   }) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 400;
+
     double totalAmount = transactions.fold<double>(
       0,
       (prev, t) => prev + (t['amount'] as num).toDouble(),
@@ -143,7 +146,10 @@ class _TransactionsCompactState extends State<TransactionsCompact> {
         Container(
           width: double.infinity,
           margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 12 : 16,
+            vertical: isSmallScreen ? 6 : 8,
+          ),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF3F8C92), Color(0xFF1F4649)],
@@ -158,32 +164,36 @@ class _TransactionsCompactState extends State<TransactionsCompact> {
               ),
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
-              Row(
+              Wrap(
+                spacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Icon(
                     title == "Pemasukan"
                         ? Icons.arrow_downward
                         : Icons.arrow_upward,
                     color: Colors.white,
+                    size: isSmallScreen ? 16 : 20,
                   ),
-                  const SizedBox(width: 8),
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: isSmallScreen ? 14 : 16,
                     ),
                   ),
-                  const SizedBox(width: 8),
                   Text(
                     "(${transactions.length} transaksi)",
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: isSmallScreen ? 12 : 14,
                     ),
                   ),
                 ],
@@ -194,12 +204,15 @@ class _TransactionsCompactState extends State<TransactionsCompact> {
                         symbol: widget.currency,
                         decimalDigits: 2)
                     .format(totalAmount),
-                child: Text(
-                  "${widget.currency}${_formatShortCurrency(totalAmount)}",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    "${widget.currency}${_formatShortCurrency(totalAmount)}",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: isSmallScreen ? 16 : 18,
+                    ),
                   ),
                 ),
               ),
