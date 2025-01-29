@@ -79,8 +79,7 @@ class _CustomTransactionDialogState extends State<CustomTransactionDialog> {
       } else {
         throw Exception('Failed to delete transaction');
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   String _formatCurrency(double amount, String currency) {
@@ -102,215 +101,220 @@ class _CustomTransactionDialogState extends State<CustomTransactionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 400;
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Stack(
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF3F8C92), Color(0xFF1F4649)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: Text(
-                    widget.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: size.width * 0.9,
+          maxHeight: size.height * 0.8,
+        ),
+        child: Stack(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF3F8C92), Color(0xFF1F4649)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
                     ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDetailRow('Kategori', widget.category),
-                    _buildDetailRow('Tanggal', widget.date),
-                    _buildDetailRow('Akun', widget.account),
-                    _buildDetailRow(
-                      'Jumlah (${widget.mainCurrency})',
-                      _formatCurrency(widget.amount, widget.mainCurrency),
-                    ),
-                    _buildDetailRow(
-                      'Jumlah (${widget.subCurrency})',
-                      _formatCurrency(widget.subAmount, widget.subCurrency),
-                    ),
-                    const SizedBox(height: 4),
-                    if (_isLoading)
-                      const Center(
-                        child: CircularProgressIndicator(),
-                      )
-                    else if (_photos.isNotEmpty)
-                      _buildPhotoPreview(context),
-                    if (!_isLoading && _photos.isEmpty)
-                      const Text('Tidak ada foto yang tersedia'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            top: 8,
-            left: 8,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddEditTransactionScreen(
-                      transactionId: widget.transactionId,
-                    ),
-                  ),
-                ).then((value) {
-                  if (value == true) {
-                    Navigator.of(context).pop(true);
-                  }
-                });
-              },
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(8),
-                child: const Icon(
-                  Icons.edit,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 8,
-            right: 8,
-            child: GestureDetector(
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return Center(
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.8,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.white,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.warning_amber_rounded,
-                                size: 50,
-                                color: Colors.red,
-                              ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Konfirmasi Hapus',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Apakah Anda yakin ingin menghapus transaksi ini? Data yang dihapus tidak dapat dikembalikan.',
-                                textAlign: TextAlign.center,
-                                style:
-                                    TextStyle(fontSize: 14, color: Colors.grey),
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey.shade200,
-                                      foregroundColor: Colors.black,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: const Text('Batal'),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: deleteTransaction,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: const Text('Hapus'),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 16 : 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
-                    );
-                  },
-                );
-              },
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.transparent,
-                  shape: BoxShape.circle,
+                    ),
+                  ),
                 ),
-                padding: const EdgeInsets.all(8),
-                child: const Icon(
-                  Icons.delete,
-                  color: Colors.white,
-                  size: 24,
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildDetailColumn('Kategori', widget.category),
+                        _buildDetailColumn('Tanggal', widget.date),
+                        _buildDetailColumn('Akun', widget.account),
+                        _buildDetailColumn(
+                          'Jumlah (${widget.mainCurrency})',
+                          _formatCurrency(widget.amount, widget.mainCurrency),
+                        ),
+                        _buildDetailColumn(
+                          'Jumlah (${widget.subCurrency})',
+                          _formatCurrency(widget.subAmount, widget.subCurrency),
+                        ),
+                        const SizedBox(height: 8),
+                        if (_isLoading)
+                          const Center(child: CircularProgressIndicator())
+                        else if (_photos.isNotEmpty)
+                          _buildPhotoPreview(context),
+                        if (!_isLoading && _photos.isEmpty)
+                          const Text('Tidak ada foto yang tersedia'),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              top: 8,
+              left: 8,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddEditTransactionScreen(
+                        transactionId: widget.transactionId,
+                      ),
+                    ),
+                  ).then((value) {
+                    if (value == true) {
+                      Navigator.of(context).pop(true);
+                    }
+                  });
+                },
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: const Icon(
+                    Icons.edit,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+            Positioned(
+              top: 8,
+              right: 8,
+              child: GestureDetector(
+                onTap: () {
+                  _showDeleteConfirmation(context);
+                },
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: const Icon(
+                    Icons.delete,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 50,
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Konfirmasi Hapus',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Apakah Anda yakin ingin menghapus transaksi ini? Data yang dihapus tidak dapat dikembalikan.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Batal'),
+                    ),
+                    ElevatedButton(
+                      onPressed: deleteTransaction,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Hapus'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailColumn(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
             style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+          const SizedBox(height: 2),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
           ),
         ],
